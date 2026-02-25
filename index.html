@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Rad van Woorden</title>
+<link href="https://fonts.googleapis.com/css2?family=Alfa+Slab+One&family=Oswald:wght@300;400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="root">
+
+<!-- ═══ TITELSCHERM ═══ -->
+<div class="screen active" id="screen-title">
+  <div class="title-stars" id="title-stars"></div>
+  <div class="title-badge">
+    <div class="title-top">★ Het Klassieke Woordspel ★</div>
+    <div class="title-main">
+      <div class="t-of">RAD VAN</div>
+      <div class="t-fortune">WOORDEN</div>
+    </div>
+    <div class="title-divider"></div>
+
+    <div class="title-section-label">Hoeveel rondes?</div>
+    <div class="opt-row" id="rounds-sel">
+      <div class="opt-btn sel" data-r="3">3</div>
+      <div class="opt-btn" data-r="5">5</div>
+      <div class="opt-btn" data-r="7">7</div>
+    </div>
+
+    <div class="title-section-label">Moeilijkheid computer?</div>
+    <div class="opt-row" id="diff-sel">
+      <div class="opt-btn" data-d="easy">😊 Makkelijk</div>
+      <div class="opt-btn sel" data-d="medium">🧠 Gemiddeld</div>
+      <div class="opt-btn" data-d="hard">💀 Moeilijk</div>
+    </div>
+
+    <button class="btn-start" onclick="startGame()">▶ DRAAI HET RAD</button>
+  </div>
+</div>
+
+<!-- ═══ SPELSCHERM ═══ -->
+<div class="screen" id="screen-game">
+
+  <!-- Header altijd bovenaan -->
+  <div class="game-header">
+    <div class="hdr-top">
+      <div class="logo-sm">Rad van Woorden</div>
+      <div class="hdr-right">
+        <div class="round-pill" id="round-pill">Ronde 1</div>
+        <div class="diff-badge" id="diff-badge">GEMIDDELD</div>
+        <button class="mute-btn" id="mute-btn" onclick="toggleMute()" aria-label="Geluid aan/uit" title="Geluid aan/uit">🔊</button>
+        <button class="menu-btn" id="menu-btn" onclick="toggleMenu(event)" aria-label="Menu">
+          <span></span><span></span><span></span>
+        </button>
+        <div class="menu-dropdown" id="menu-dropdown">
+          <button class="menu-item menu-item-rules" onclick="menuRules()">📋 Spelregels</button>
+          <button class="menu-item" onclick="menuPlayAgain()">▶ Opnieuw spelen</button>
+          <button class="menu-item menu-item-quit" onclick="menuQuit()">✕ Stoppen</button>
+        </div>
+      </div>
+    </div>
+    <div class="scorecards">
+      <div class="scorecard active-turn" id="sc-player">
+        <div class="sc-name"><span class="sc-dot"></span>JIJ</div>
+        <div class="sc-round" id="p-round">€0</div>
+        <div class="sc-total" id="p-total">Totaal €0</div>
+      </div>
+      <div class="scorecard" id="sc-comp">
+        <div class="sc-name"><span class="sc-dot"></span>COMPUTER</div>
+        <div class="sc-round" id="c-round">€0</div>
+        <div class="sc-total" id="c-total">Totaal €0</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Body: mobiel gestapeld, desktop twee kolommen -->
+  <div class="game-body" style="flex:1;display:flex;flex-direction:column;min-height:0;">
+
+    <div class="col-left" style="display:flex;flex-direction:column;">
+
+      <div class="puzzle-area">
+        <div class="cat-tag" id="cat-display">Categorie</div>
+        <div class="puzzle-grid" id="puzzle-grid"></div>
+      </div>
+
+      <div class="wheel-section">
+        <div class="wheel-wrap" id="wheel-wrap">
+          <svg class="wheel-arrow" width="24" height="26" viewBox="0 0 24 26">
+            <polygon points="12,2 22,24 12,20 2,24" fill="#e63946" stroke="#0b0b14" stroke-width="1.5"/>
+          </svg>
+          <canvas id="wheel-canvas"></canvas>
+          <div class="wheel-hub" id="wheel-hub"></div>
+        </div>
+        <div class="spin-banner empty" id="spin-banner"></div>
+        <div class="think-bar" id="think-bar">
+          <div class="tdot"></div><div class="tdot"></div><div class="tdot"></div>
+          <span style="margin-left:4px">Computer denkt na</span>
+        </div>
+      </div>
+
+    </div><!-- /col-left -->
+
+    <div class="col-right" style="display:flex;flex-direction:column;">
+      <div class="controls">
+        <div class="action-btns">
+          <button class="action-btn btn-spin" id="btn-spin" onclick="handleSpin()">🎰 DRAAIEN</button>
+          <button class="action-btn btn-vowel" id="btn-vowel" onclick="handleBuyVowel()" disabled>KLINKER<br><small>€250</small></button>
+          <button class="action-btn btn-solve-action" id="btn-solve" onclick="openSolveModal()">✓ OPLOSSEN</button>
+        </div>
+        <div class="keyboard" id="keyboard"></div>
+        <div class="kb-hint">⌨ Gebruik je toetsenbord om letters te raden</div>
+      </div>
+    </div><!-- /col-right -->
+
+  </div><!-- /game-body -->
+
+</div><!-- /screen-game -->
+
+</div><!-- /#root -->
+
+<!-- ═══ SPELREGELS MODAL ═══ -->
+<div class="modal-overlay" id="modal-rules">
+  <div class="rules-modal-box">
+    <div class="modal-title" style="font-size:22px;margin-bottom:4px;">📋 Spelregels</div>
+    <div style="text-align:center;font-size:11px;letter-spacing:2px;color:var(--muted);margin-bottom:16px;text-transform:uppercase;">Rad van Woorden</div>
+
+    <div class="rules-section">
+      <div class="rules-section-title">🎯 Doel van het spel</div>
+      <div class="rules-item"><span class="ri">🏆</span><span>Raad de verborgen puzzel en verdien zoveel mogelijk geld. De speler met het meeste geld aan het einde wint!</span></div>
+    </div>
+
+    <div class="rules-section">
+      <div class="rules-section-title">🔄 Hoe een beurt werkt</div>
+      <div class="rules-item"><span class="ri">1️⃣</span><span>Druk op <span class="rules-chip chip-gold">🎰 DRAAIEN</span> om het rad te draaien en een geldbedrag te verdienen.</span></div>
+      <div class="rules-item"><span class="ri">2️⃣</span><span>Na het draaien kies je een <strong>medeklinker</strong> op het toetsenbord. Voor elke keer dat de letter voorkomt verdien je het bedrag op het rad.</span></div>
+      <div class="rules-item"><span class="ri">3️⃣</span><span>Bij een goede letter mag je opnieuw draaien of een klinker kopen. Bij een foute letter is de ander aan de beurt.</span></div>
+    </div>
+
+    <div class="rules-section">
+      <div class="rules-section-title">🔤 Klinkers kopen</div>
+      <div class="rules-item"><span class="ri">💶</span><span>Een klinker (A, E, I, O, U) kopen kost <span class="rules-chip chip-blue">€250</span>. Klinkers leveren geen extra geld op, maar helpen de puzzel te ontcijferen.</span></div>
+      <div class="rules-item"><span class="ri">💡</span><span>Je kunt alleen een klinker kopen als je minstens €250 in de pot hebt voor die ronde.</span></div>
+    </div>
+
+    <div class="rules-section">
+      <div class="rules-section-title">✅ Oplossen</div>
+      <div class="rules-item"><span class="ri">🧠</span><span>Denk je de puzzel te weten? Druk op <span class="rules-chip chip-green">✓ OPLOSSEN</span> en typ het volledige antwoord in. Goed? Je wint de ronde! Fout? De ander is aan de beurt.</span></div>
+    </div>
+
+    <div class="rules-section">
+      <div class="rules-section-title">⚠️ Speciale vakken op het rad</div>
+      <div class="rules-item"><span class="ri">💸</span><span><span class="rules-chip chip-red">FAILLIET</span> — Je verliest al je verdiensten van die ronde en de beurt gaat naar de ander.</span></div>
+      <div class="rules-item"><span class="ri">😬</span><span><span class="rules-chip chip-red">BEURT VERLIES</span> — Je verliest je beurt. Je rondeverdiensten blijven bewaard.</span></div>
+    </div>
+
+    <div class="rules-section">
+      <div class="rules-section-title">🎯 Wie Raadt Het Eerst</div>
+      <div class="rules-item"><span class="ri">⚡</span><span>Zijn alle medeklinkers al geraden en heeft niemand genoeg geld voor klinkers? Dan begint <strong>Wie Raadt Het Eerst</strong>: de resterende klinkers worden één voor één onthuld. De eerste die het oplost wint de ronde!</span></div>
+    </div>
+
+    <div class="rules-section">
+      <div class="rules-section-title">🎮 Rondes & Winnen</div>
+      <div class="rules-item"><span class="ri">🔁</span><span>Kies 3, 5 of 7 rondes voor het spel begint. Op basis van moeilijkheid worden enkele letters automatisch onthuld aan het begin van elke ronde.</span></div>
+      <div class="rules-item"><span class="ri">🏅</span><span>Aan het einde van alle rondes wint de speler met het <strong>hoogste totaalbedrag</strong>.</span></div>
+    </div>
+
+    <div class="rules-section">
+      <div class="rules-section-title">⌨️ Pro Tip</div>
+      <div class="rules-item"><span class="ri">💻</span><span>Op de computer kun je je <strong>fysiek toetsenbord</strong> gebruiken om letters te raden — geen klikken nodig!</span></div>
+    </div>
+
+    <button class="modal-btn mbtn-ok" style="width:100%;margin-top:4px;" onclick="closeRulesModal()">✓ BEGREPEN!</button>
+  </div>
+</div>
+
+<!-- ═══ WIE RAADT HET EERST MODAL ═══ -->
+<div class="modal-overlay" id="modal-sd">
+  <div class="modal-box" style="text-align:center;">
+    <div style="font-size:54px;margin-bottom:10px;">⚡</div>
+    <div class="modal-title" style="font-size:22px;">Wie Raadt Het Eerst!</div>
+    <div class="modal-sub">Geen medeklinkers meer en geen geld voor klinkers. De resterende klinkers worden één voor één onthuld. <strong style="color:var(--gold)">Los op zodra je het weet!</strong></div>
+    <button class="modal-btn mbtn-ok" style="width:100%" onclick="startSdReveal()">⚡ BEGIN!</button>
+  </div>
+</div>
+
+<!-- ═══ OPLOSSEN MODAL ═══ -->
+<div class="modal-overlay" id="modal-solve">
+  <div class="modal-box">
+    <div class="modal-title">Oplossen!</div>
+    <div class="modal-sub">Typ het volledige antwoord</div>
+    <input class="modal-input" id="solve-input" type="text" placeholder="Jouw antwoord…" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" inputmode="text" enterkeyhint="done">
+    <div class="modal-btns">
+      <button class="modal-btn mbtn-ok" onclick="submitSolve()">BEVESTIGEN</button>
+      <button class="modal-btn mbtn-cancel" onclick="closeSolveModal()">ANNULEREN</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ RESULTAAT MODAL ═══ -->
+<div class="modal-overlay" id="modal-result">
+  <div class="modal-box">
+    <div class="result-icon" id="res-icon">🎉</div>
+    <div class="modal-title" id="res-title">Gewonnen!</div>
+    <div class="modal-sub" id="res-sub"></div>
+    <div class="result-answer" id="res-answer"></div>
+    <button class="modal-btn mbtn-ok" style="width:100%" onclick="continueAfterResult()">VERDER →</button>
+  </div>
+</div>
+
+<!-- ═══ SPEL VOORBIJ MODAL ═══ -->
+<div class="modal-overlay" id="modal-go">
+  <div class="modal-box">
+    <div class="result-icon" id="go-icon">🏆</div>
+    <div class="modal-title" id="go-title">Spel Voorbij!</div>
+    <div class="modal-sub" id="go-sub"></div>
+    <div class="final-scores">
+      <div class="fsc" id="go-p"><div class="fsc-name">JIJ</div><div class="fsc-score" id="go-ps">€0</div><div class="fsc-lbl">TOTAAL</div></div>
+      <div class="fsc" id="go-c"><div class="fsc-name">COMPUTER</div><div class="fsc-score" id="go-cs">€0</div><div class="fsc-lbl">TOTAAL</div></div>
+    </div>
+    <button class="modal-btn mbtn-ok" style="width:100%;margin-bottom:8px;" onclick="playAgain()">▶ OPNIEUW SPELEN</button>
+    <button class="modal-btn mbtn-quit" style="width:100%;" onclick="menuQuit()">✕ STOPPEN</button>
+  </div>
+</div>
+
+<!-- ═══ STOP SCHERM / BEDANKT ═══ -->
+<div id="screen-quit">
+  <div id="balloons-container" style="position:absolute;inset:0;pointer-events:none;z-index:1;overflow:hidden;"></div>
+  <div class="quit-box">
+    <div class="quit-emoji">🎈🎉🎈</div>
+    <div class="quit-thank">Bedankt voor het spelen van ons spel</div>
+    <div class="quit-divider"></div>
+    <div class="quit-regards">Met vriendelijke groet,<strong>Claude A.I &amp; MH Oddens</strong></div>
+    <button class="btn-start" id="quit-play-btn" style="font-size:15px;padding:12px;opacity:0;" onclick="quitToTitle()">▶ OPNIEUW SPELEN</button>
+  </div>
+</div>
+
+<!-- Scripts: puzzles moet voor spellogica geladen worden -->
+<script src="puzzles.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
